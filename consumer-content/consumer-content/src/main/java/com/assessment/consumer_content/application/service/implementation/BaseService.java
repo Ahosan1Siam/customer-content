@@ -52,8 +52,7 @@ public abstract class BaseService<E extends BaseEntity, D extends BaseRequest>ex
             return CommonResponse.makeResponse(e, e.getMessage(), false);
         }
     }
-
-    public Envelope get(Long id) {
+    public Envelope get(long id){
         Optional<E> entityOptional = repository.findById(id);
         E entity = null;
         if(entityOptional.isPresent()) {
