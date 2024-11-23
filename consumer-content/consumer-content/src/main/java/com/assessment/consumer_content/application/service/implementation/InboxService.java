@@ -26,18 +26,16 @@ public class InboxService extends BaseService<Inbox, InboxRequest> implements II
         return super.create(inboxRequest);
     }
 
-    public Envelope bulkContentSave(List<InboxRequest> requestList){
+    public List<Inbox> bulkContentSave(List<Inbox> requestList){
         try {
-            List<Inbox> list = new ArrayList<>();
-            requestList.forEach(x->{
-                Inbox inbox= new Inbox();
-                BeanUtils.copyProperties(x,inbox);
-                list.add(inbox);
-            });
-            _repository.saveAll(list);
-            return CommonResponse.makeResponse(true,"SuccessFul",true);
+            List<Inbox> inboxes= _repository.saveAll(requestList);
+            return inboxes;
         }catch (Exception ex){
-            return CommonResponse.makeResponse(ex,ex.getMessage(),false);
+            return null;
         }
+    }
+
+    public List<Inbox> findAll(){
+       return _repository.findAll();
     }
 }

@@ -20,4 +20,13 @@ public abstract class BaseEntity {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @PrePersist
+    private void prePersist() {
+        this.setCreatedAt(LocalDateTime.now());
+    }
+    @PreUpdate
+    private void preUpdate(){
+        this.setUpdatedAt(LocalDateTime.now());
+    }
+
 }

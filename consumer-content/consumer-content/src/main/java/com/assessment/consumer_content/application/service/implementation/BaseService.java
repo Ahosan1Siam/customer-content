@@ -11,6 +11,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.BeanUtils;
+import org.springframework.cache.annotation.Cacheable;
 
 import java.util.Optional;
 
