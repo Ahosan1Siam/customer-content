@@ -88,7 +88,7 @@ public class ContentProviderClient {
     public Mono<ContentConsumerResponse> getContent() {
         String url = serviceDiscoveryClient.getContentProviderUrl();
         WebClient webClient = WebClient.builder().exchangeStrategies(ExchangeStrategies.builder()
-                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(1024 * 1024)) // Set to 512KB or adjust as needed
+                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(1024 * 1024))
                 .build())
                 .build();
         return webClient

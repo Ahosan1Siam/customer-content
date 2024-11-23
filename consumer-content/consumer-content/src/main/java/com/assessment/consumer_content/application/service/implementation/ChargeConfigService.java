@@ -6,7 +6,6 @@ import com.assessment.consumer_content.application.service.contract.IChargeConfi
 import com.assessment.consumer_content.domain.entities.ChargeConfig;
 import com.assessment.consumer_content.domain.repository.BaseRepository;
 import com.assessment.consumer_content.domain.repository.ChargeConfigRepository;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,7 +17,6 @@ public class ChargeConfigService extends BaseService<ChargeConfig, ChargeConfigR
         super(repository);
         _chargeConfigRepository = chargeConfigRepository;
     }
-    @Cacheable(value = "chargeConfigs")
     public List<ChargeCodeResponse> getChargeConfigs() {
         return _chargeConfigRepository.getOperatorsWithChargeCode();
     }

@@ -11,7 +11,7 @@ import java.util.Set;
 @Repository
 public interface ChargeConfigRepository extends BaseRepository<ChargeConfig>{
     @Query("""
-        SELECT com.assessment.consumer_content.application.dtos.response.ChargeCodeResponse(c.operator,c.chargeCode) FROM ChargeConfig c
+        SELECT new com.assessment.consumer_content.application.dtos.response.ChargeCodeResponse(c.chargeCode,c.operator) FROM ChargeConfig c
         """)
     List<ChargeCodeResponse> getOperatorsWithChargeCode();
 
