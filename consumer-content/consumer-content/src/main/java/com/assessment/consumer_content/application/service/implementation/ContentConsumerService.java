@@ -45,54 +45,8 @@ public class ContentConsumerService  implements IContentConsumerService {
             Mono<ContentConsumerResponse> contentRetrievalClientResponse = _contentProvideClient.getContent();
             ContentConsumerResponse response = contentRetrievalClientResponse.block();
             if(response.getStatusCode()!=200) return CommonResponse.makeResponse(response.getStatusCode(),response.getMessage(),false);
-            List<Inbox> savedList = new ArrayList<>();
-
-            ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
-            List<Inbox> inboxes = Collections.synchronizedList(new ArrayList<>());
-
-            try {
-                response.getContents().parallelStream().forEach(content -> executor.submit(() -> {
-                    Map<String, String> stringMap = contentParser.parseContent(content.getSms());
-                    if (stringMap == null) {
-                        log.error("Invalid SMS Format. Skipping content: {}", content.getSms());
-                        return;
-                    }
-
-                    Inbox inbox = new Inbox();
-                    BeanUtils.copyProperties(content, inbox);
-                    inbox.setStatus("N");
-                    inbox.setKeyword(stringMap.get("Keyword"));
-                    inbox.setGameName(stringMap.get("Game name"));
-                    inboxes.add(inbox);
-
-                    synchronized (inboxes) {
-                        if (inboxes.size() >= BATCH_SIZE) {
-                            List<Inbox> batchToSave = new ArrayList<>(inboxes);
-                            inboxes.clear();
-                            var bulkContentSave = iInboxService.bulkContentSave(batchToSave);
-                            savedList.addAll(bulkContentSave);
-                        }
-                    }
-                }));
-            } catch (Exception ex) {
-                log.error("Error processing contents: {}", ex.getMessage());
-            } finally {
-                executor.shutdown();
-                try {
-                    if (!executor.awaitTermination(60, TimeUnit.SECONDS)) {
-                        log.error("Executor did not terminate in the specified time.");
-                    }
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    log.error("Executor termination interrupted: {}", e.getMessage());
-                }
-
-                if (!inboxes.isEmpty()) {
-                    var finalBulkSave = iInboxService.bulkContentSave(new ArrayList<>(inboxes));
-                    savedList.addAll(finalBulkSave);
-                }
-            }
-            _processHandlerService.HandleProcess(savedList);
+            List<Inbox> savedList =  iInboxService.modifyAndSaveList(response.getContents());
+            //_processHandlerService.HandleProcess(savedList);
             return CommonResponse.makeResponse(savedList,"Successful",!savedList.isEmpty());
         }catch (Exception ex){
             return CommonResponse.makeResponse(ex, ex.getMessage(), false);
