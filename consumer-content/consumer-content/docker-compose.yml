@@ -28,8 +28,14 @@ services:
     networks:
       - postgres
     restart: unless-stopped
-
+  redis:
+    container_name: redis
+    image: redis:latest
+    ports:
+      - "6379:6379"
 networks:
+  app-network:
+    driver: bridge
   postgres:
     driver: bridge
 

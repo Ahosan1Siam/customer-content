@@ -7,6 +7,8 @@ import com.assessment.consumer_content.application.service.contract.IKeywordDeta
 import com.assessment.consumer_content.domain.entities.KeywordDetails;
 import com.assessment.consumer_content.domain.repository.BaseRepository;
 import com.assessment.consumer_content.domain.repository.KeywordDetailsRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 
@@ -26,12 +28,13 @@ public class KeywordDetailsService extends BaseService<KeywordDetails, KeywordDe
     }
 
     @Override
+    @CacheEvict(value = "keywords", allEntries = true)
     public Envelope create(KeywordDetailsRequest request) {
         KeywordDetails e = convertForCreate(request);
         KeywordDetails res = _keywordDetailsRepository.save(e);
         return CommonResponse.makeResponse(res,"Successful",true);
     }
-
+    @Cacheable(value = "keywords")
     @Override
     public Set<String> getAllKeywordDetails() {
         return _keywordDetailsRepository.findKeywords();

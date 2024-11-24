@@ -55,7 +55,7 @@ public class ProcessHandlerService implements IProcessHandlerService {
             inboxes.addAll(_inboxService.findAll());
         }
 
-        Set<String> keywords = _keywordDetailsService.getAllKeywordDetails();
+
         List<ChargeCodeResponse> chargeCodes = _chargeConfigService.getChargeConfigs();
 
         List<ChargeSuccessLog> successLogs = Collections.synchronizedList(new ArrayList<>());
@@ -65,6 +65,7 @@ public class ProcessHandlerService implements IProcessHandlerService {
         ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
         try {
             inboxes.parallelStream().forEach(inbox -> executor.submit(() -> {
+                Set<String> keywords = _keywordDetailsService.getAllKeywordDetails();
                 boolean isValid = _validateKeyWord.validate(keywords, inbox.getKeyword());
                 if (isValid) {
                     UnlockCodeResponse codeResponse = getUnlockCode(inbox);
