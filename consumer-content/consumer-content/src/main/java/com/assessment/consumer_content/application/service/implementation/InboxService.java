@@ -53,40 +53,40 @@ public class InboxService extends BaseService<Inbox, InboxRequest> implements II
     public List<Inbox> modifyAndSaveList(List<ContentsResponse> responseList) {
         List<Inbox> savedList = new ArrayList<>();
 
-        ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
-        List<Inbox> inboxes = Collections.synchronizedList(new ArrayList<>());
-        try {
-            responseList.parallelStream().forEach(content -> executor.submit(() -> {
-                Map<String, String> stringMap = contentParser.parseContent(content.getSms());
-                if (stringMap == null) {
-                    log.error("Invalid SMS Format. Skipping content: {}", content.getSms());
-                    return;
-                }
-                inboxes.add(createInboxObject(content,stringMap));
-                synchronized (inboxes) {
-                    if (inboxes.size() >= BATCH_SIZE) {
-                        List<Inbox> batchToSave = new ArrayList<>(inboxes);
-                        inboxes.clear();
-                        var bulkContentSave = bulkContentSave(batchToSave);
-                        savedList.addAll(bulkContentSave);
-                    }
-                }
-            }));
-        } catch (Exception ex) {
-            log.error("Error processing contents: {}", ex.getMessage());
-        } finally {
-            executor.shutdown();
+        try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            List<Inbox> inboxes = Collections.synchronizedList(new ArrayList<>());
             try {
-                if (!executor.awaitTermination(60, TimeUnit.SECONDS)) {
-                    log.error("Executor did not terminate in the specified time.");
+                responseList.parallelStream().forEach(content -> executor.submit(() -> {
+                    Map<String, String> stringMap = contentParser.parseContent(content.getSms());
+                    if (stringMap == null) {
+                        log.error("Invalid SMS Format. Skipping content: {}", content.getSms());
+                        return;
+                    }
+                    inboxes.add(createInboxObject(content, stringMap));
+                    synchronized (inboxes) {
+                        if (inboxes.size() >= BATCH_SIZE) {
+                            var bulkContentSave = bulkContentSave(inboxes);
+                            inboxes.clear();
+                            savedList.addAll(bulkContentSave);
+                        }
+                    }
+                }));
+            } catch (Exception ex) {
+                log.error("Error processing contents: {}", ex.getMessage());
+            } finally {
+                executor.shutdown();
+                try {
+                    if (!executor.awaitTermination(60, TimeUnit.SECONDS)) {
+                        log.error("Executor did not terminate in the specified time.");
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    log.error("Executor termination interrupted: {}", e.getMessage());
                 }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                log.error("Executor termination interrupted: {}", e.getMessage());
-            }
-            if (!inboxes.isEmpty()) {
-                var finalBulkSave = bulkContentSave(new ArrayList<>(inboxes));
-                savedList.addAll(finalBulkSave);
+                if (!inboxes.isEmpty()) {
+                    var finalBulkSave = bulkContentSave(new ArrayList<>(inboxes));
+                    savedList.addAll(finalBulkSave);
+                }
             }
         }
         return savedList;
