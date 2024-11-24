@@ -67,54 +67,24 @@ public class ProcessHandlerService implements IProcessHandlerService {
             inboxes.parallelStream().forEach(inbox -> executor.submit(() -> {
                 boolean isValid = _validateKeyWord.validate(keywords, inbox.getKeyword());
                 if (isValid) {
-                    UnlockCodeRequest request = new UnlockCodeRequest();
-                    BeanUtils.copyProperties(inbox, request);
-                    Mono<UnlockCodeResponse> unlockCodeResponse = _contentProviderClient.getUnlockCode(request);
-                    UnlockCodeResponse codeResponse = unlockCodeResponse.block();
-
+                    UnlockCodeResponse codeResponse = getUnlockCode(inbox);
                     if (codeResponse.getStatusCode() == 200) {
-                        String chargeCode = _chargeCodeParser.getChargeCode(chargeCodes, inbox.getOperator());
-                        PerformChargingRequest chargingRequest = new PerformChargingRequest();
-                        BeanUtils.copyProperties(inbox, chargingRequest);
-                        chargingRequest.setChargeCode(chargeCode);
-
-                        Mono<PerformChargingResponse> chargingResponseMono = _contentProviderClient.performCharging(chargingRequest);
-                        PerformChargingResponse chargingResponse = chargingResponseMono.block();
-
+                        PerformChargingResponse chargingResponse = performCharging(chargeCodes,inbox);
                         if (chargingResponse.getStatusCode() == 200) {
-                            ChargeSuccessLog successLog = new ChargeSuccessLog();
-                            BeanUtils.copyProperties(chargingResponse, successLog);
-                            successLog.setSmsId(inbox.getId());
-                            successLog.setKeyword(inbox.getKeyword());
-                            successLog.setGameName(inbox.getGameName());
                             inbox.setStatus("S");
-
                             synchronized (successLogs) {
-                                successLogs.add(successLog);
+                                successLogs.add(createChargeSuccessLogObject(chargingResponse,inbox));
                                 saveBatchIfFull(successLogs, BATCH_SIZE, _chargeSuccessLogService::bulkSave);
                             }
                         } else {
-                            ChargeFailureLog failureLog = new ChargeFailureLog();
-                            BeanUtils.copyProperties(chargingResponse, failureLog);
-                            failureLog.setSmsId(inbox.getId());
-                            failureLog.setKeyword(inbox.getKeyword());
-                            failureLog.setGameName(inbox.getGameName());
-                            failureLog.setStatusCode(chargingResponse.getStatusCode());
-                            failureLog.setMessage(chargingResponse.getMessage());
-                            failureLog.setMsisdn(inbox.getMsisdn());
-                            failureLog.setOperator(inbox.getOperator());
-                            failureLog.setShortCode(inbox.getShortCode());
-                            failureLog.setTransactionId(inbox.getTransactionId());
                             inbox.setStatus("F");
-
                             synchronized (failures) {
-                                failures.add(failureLog);
+                                failures.add(createChargeFailureLogObject(chargingResponse,inbox));
                                 saveBatchIfFull(failures, BATCH_SIZE, _chargeFailureLogService::bulkSave);
                             }
                         }
                     }
                 }
-
                 synchronized (processedInboxes) {
                     processedInboxes.add(inbox);
                     saveBatchIfFull(processedInboxes, BATCH_SIZE, _inboxService::bulkContentSave);
@@ -155,5 +125,41 @@ public class ProcessHandlerService implements IProcessHandlerService {
             saveFunction.accept(new ArrayList<>(list));
             list.clear();
         }
+    }
+    private ChargeSuccessLog createChargeSuccessLogObject(PerformChargingResponse chargingResponse,Inbox inbox) {
+        ChargeSuccessLog successLog = new ChargeSuccessLog();
+        BeanUtils.copyProperties(chargingResponse, successLog);
+        successLog.setSmsId(inbox.getId());
+        successLog.setKeyword(inbox.getKeyword());
+        successLog.setGameName(inbox.getGameName());
+        return successLog;
+    }
+    private ChargeFailureLog createChargeFailureLogObject(PerformChargingResponse chargingResponse,Inbox inbox) {
+        ChargeFailureLog failureLog = new ChargeFailureLog();
+        BeanUtils.copyProperties(chargingResponse, failureLog);
+        failureLog.setSmsId(inbox.getId());
+        failureLog.setKeyword(inbox.getKeyword());
+        failureLog.setGameName(inbox.getGameName());
+        failureLog.setStatusCode(chargingResponse.getStatusCode());
+        failureLog.setMessage(chargingResponse.getMessage());
+        failureLog.setMsisdn(inbox.getMsisdn());
+        failureLog.setOperator(inbox.getOperator());
+        failureLog.setShortCode(inbox.getShortCode());
+        failureLog.setTransactionId(inbox.getTransactionId());
+        return failureLog;
+    }
+    private UnlockCodeResponse getUnlockCode(Inbox inbox) {
+        UnlockCodeRequest request = new UnlockCodeRequest();
+        BeanUtils.copyProperties(inbox, request);
+        Mono<UnlockCodeResponse> unlockCodeResponse = _contentProviderClient.getUnlockCode(request);
+        return unlockCodeResponse.block();
+    }
+    private PerformChargingResponse performCharging(List<ChargeCodeResponse> chargeCodes,Inbox inbox) {
+        String chargeCode = _chargeCodeParser.getChargeCode(chargeCodes, inbox.getOperator());
+        PerformChargingRequest chargingRequest = new PerformChargingRequest();
+        BeanUtils.copyProperties(inbox, chargingRequest);
+        chargingRequest.setChargeCode(chargeCode);
+        Mono<PerformChargingResponse> chargingResponseMono = _contentProviderClient.performCharging(chargingRequest);
+        return chargingResponseMono.block();
     }
 }
