@@ -52,9 +52,10 @@ public class ProcessHandlerService implements IProcessHandlerService {
 
 
     public List<Inbox> HandleProcess(List<Inbox> inboxes){
+        List<ChargeCodeResponse> chargeCodes = _chargeConfigService.getChargeConfigs();
         try (ExecutorService virtualThreadExecutor = Executors.newVirtualThreadPerTaskExecutor()) {
             List<CompletableFuture<List<Inbox>>> futures = _listPartitioner.partitionList(inboxes,DIVISOR_SIZE).stream()
-                    .map(partition -> CompletableFuture.supplyAsync(() -> ExecuteProcess(partition), virtualThreadExecutor))
+                    .map(partition -> CompletableFuture.supplyAsync(() -> ExecuteProcess(partition,chargeCodes), virtualThreadExecutor))
                     .toList();
 
             return futures.stream()
@@ -64,10 +65,7 @@ public class ProcessHandlerService implements IProcessHandlerService {
         }
     }
 
-    private List<Inbox> ExecuteProcess(List<Inbox> inboxes) {
-
-        List<ChargeCodeResponse> chargeCodes = _chargeConfigService.getChargeConfigs();
-
+    private List<Inbox> ExecuteProcess(List<Inbox> inboxes,List<ChargeCodeResponse> chargeCodes) {
         List<ChargeSuccessLog> successLogs = Collections.synchronizedList(new ArrayList<>());
         List<ChargeFailureLog> failures = Collections.synchronizedList(new ArrayList<>());
         List<Inbox> processedInboxes = Collections.synchronizedList(new ArrayList<>());
