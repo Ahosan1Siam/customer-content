@@ -22,7 +22,7 @@ public class ChargeConfigController extends BaseController<ChargeConfig, ChargeC
     }
 
 
-    @PostMapping("/save-bulk-keyword")
+    @PostMapping("/save-bulk-data")
     public Envelope saveKeywords(@RequestBody List<ChargeConfigRequest> request) {
         return _chargeConfigService.bulkSave(request);
     }

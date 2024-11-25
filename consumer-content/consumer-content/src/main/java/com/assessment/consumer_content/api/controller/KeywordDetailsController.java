@@ -21,7 +21,7 @@ public class KeywordDetailsController extends BaseController<KeywordDetails, Key
         this._keywordDetailsService = keywordDetailsService;
     }
 
-    @PostMapping("/save-bulk-keyword")
+    @PostMapping("/save-bulk-data")
     public Envelope saveKeywords(@RequestBody List<KeywordDetailsRequest> request) {
        return _keywordDetailsService.bulkSave(request);
     }
