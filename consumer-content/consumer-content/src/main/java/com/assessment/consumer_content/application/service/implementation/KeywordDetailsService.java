@@ -7,11 +7,14 @@ import com.assessment.consumer_content.application.service.contract.IKeywordDeta
 import com.assessment.consumer_content.domain.entities.KeywordDetails;
 import com.assessment.consumer_content.domain.repository.BaseRepository;
 import com.assessment.consumer_content.domain.repository.KeywordDetailsRepository;
+import org.springframework.beans.BeanUtils;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 @Service
@@ -38,5 +41,16 @@ public class KeywordDetailsService extends BaseService<KeywordDetails, KeywordDe
     @Override
     public Set<String> getAllKeywordDetails() {
         return _keywordDetailsRepository.findKeywords();
+    }
+    @Override
+    public Envelope bulkSave(List<KeywordDetailsRequest> requests) {
+        List<KeywordDetails> keywords = new ArrayList<>();
+        for (KeywordDetailsRequest request : requests) {
+            KeywordDetails keywordDetails = new KeywordDetails();
+            BeanUtils.copyProperties(request, keywordDetails);
+            keywords.add(keywordDetails);
+        }
+        var saveList =_keywordDetailsRepository.saveAll(keywords);
+        return CommonResponse.makeResponse(saveList,"Saved Response",!saveList.isEmpty());
     }
 }

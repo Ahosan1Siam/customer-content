@@ -10,7 +10,7 @@ import java.util.Set;
 @Repository
 public interface KeywordDetailsRepository extends BaseRepository<KeywordDetails>{
     @Query("""
-        SELECT kd.keyword FROM KeywordDetails kd
+        SELECT distinct (kd.keyword) FROM KeywordDetails kd
         """)
     Set<String> findKeywords();
 }

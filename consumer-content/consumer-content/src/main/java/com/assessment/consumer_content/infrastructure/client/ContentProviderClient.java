@@ -45,7 +45,7 @@ public class ContentProviderClient {
                                         errorResponse.setStatusCode(response.statusCode().value());
                                     }
                                     if (errorResponse.getMessage() == null || errorResponse.getMessage().isEmpty()) {
-                                        errorResponse.setMessage("An error occurred");
+                                        errorResponse.setMessage("An internal error occurred.");
                                     }
                                     return errorResponse;
                                 });
@@ -73,7 +73,7 @@ public class ContentProviderClient {
                                         errorResponse.setStatusCode(response.statusCode().value());
                                     }
                                     if (errorResponse.getMessage() == null || errorResponse.getMessage().isEmpty()) {
-                                        errorResponse.setMessage("An error occurred");
+                                        errorResponse.setMessage("An internal error occurred.");
                                     }
                                     return errorResponse;
                                 });
@@ -106,7 +106,7 @@ public class ContentProviderClient {
                                         errorResponse.setStatusCode(response.statusCode().value());
                                     }
                                     if (errorResponse.getMessage() == null || errorResponse.getMessage().isEmpty()) {
-                                        errorResponse.setMessage("An error occurred");
+                                        errorResponse.setMessage("An internal error occurred.");
                                     }
                                     return errorResponse;
                                 });

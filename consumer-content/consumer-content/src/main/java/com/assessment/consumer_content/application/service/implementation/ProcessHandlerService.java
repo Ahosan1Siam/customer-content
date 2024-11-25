@@ -1,6 +1,5 @@
 package com.assessment.consumer_content.application.service.implementation;
 
-import com.assessment.consumer_content.application.dtos.request.UnlockCodeRequest;
 import com.assessment.consumer_content.application.dtos.response.*;
 import com.assessment.consumer_content.application.helper.*;
 import com.assessment.consumer_content.application.service.contract.IChargeFailureLogService;
@@ -10,11 +9,8 @@ import com.assessment.consumer_content.application.service.contract.IProcessHand
 import com.assessment.consumer_content.domain.entities.ChargeFailureLog;
 import com.assessment.consumer_content.domain.entities.ChargeSuccessLog;
 import com.assessment.consumer_content.domain.entities.Inbox;
-import com.assessment.consumer_content.infrastructure.client.ContentProviderClient;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,7 +22,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static com.assessment.consumer_content.application.constant.GlobalConstant.BATCH_SIZE;
 import static com.assessment.consumer_content.application.constant.GlobalConstant.DIVISOR_SIZE;
 
 @Slf4j
