@@ -42,15 +42,12 @@ public class ContentConsumerService  implements IContentConsumerService {
 
     public Envelope getContents(){
         try {
-            Instant startTime = Instant.now();
             Mono<ContentConsumerResponse> contentRetrievalClientResponse = _contentProvideClient.getContent();
             ContentConsumerResponse response = contentRetrievalClientResponse.block();
             if(response.getStatusCode()!=200) return CommonResponse.makeResponse(response.getStatusCode(),response.getMessage(),false);
             List<Inbox> savedContents = partitionContentsAndSave(response.getContents());
-            Instant endTime = Instant.now();
-            long responseTimeSecond = Duration.between(startTime, endTime).toSeconds();
             List<Inbox> result = _processHandlerService.HandleProcess(savedContents);
-            String successMessage = String.format("Response Time : %d s",responseTimeSecond);
+            String successMessage = String.format("Total : %d data Processed",result.size());
             return CommonResponse.makeResponse(result,successMessage,!result.isEmpty());
         }catch (Exception ex){
             return CommonResponse.makeResponse(ex, ex.getMessage(), false);
